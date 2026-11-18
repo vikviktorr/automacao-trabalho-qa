@@ -26,6 +26,9 @@ Automação dos casos de teste **CT_0001 a CT_0012** do documento de casos de us
 Na primeira execução o script cria o `.venv` e instala o `requirements.txt` (Selenium, pytest e pytest-html).
 O Selenium Manager encontra o Firefox instalado e baixa o geckodriver sozinho. A suíte completa leva cerca de 4 minutos.
 
+No Zed, abra a pasta do projeto e use o ▶ ao lado de cada `def test_...` (tarefas em `.zed/tasks.json`:
+"este caso" em modo apresentação ou rápido, e "arquivo atual"). Também dá para rodar pela paleta com `task: spawn`.
+
 Saídas: `reports/relatorio.html` (relatório com print e notas de cada caso) e `evidencias/` (PNG por caso).
 
 ## Estrutura (Page Object)
@@ -47,6 +50,10 @@ CT_0007, CT_0008 e CT_0009 precisam de uma batalha em andamento. Entrar na fila 
 contra um jogador real, então cada caso abre **dois navegadores** com nomes de convidado próprios (`QA Jogador ####`
 e `QA Oponente ####`): um desafia o outro em [Gen 9] Random Battle com "Don't allow spectators" marcado.
 O oponente só escolhe um golpe para o turno andar. No fim do caso a partida é encerrada.
+
+Se a suíte for repetida muitas vezes seguidas, o servidor pode recusar novas partidas por alguns minutos
+("Due to high load, you are limited to 12 battles and team validations every 3 minutes"). Nesse caso os casos de
+batalha aparecem como *skipped* com esse motivo; basta esperar uns minutos e rodar de novo.
 
 O CT_0012 também usa duas sessões (o usuário procurado está na segunda) e só abre a janela de chat; nenhuma
 mensagem é enviada. O CT_0010 entra na fila de um formato pouco jogado (Challenge Cup 2v2) e cancela em seguida;

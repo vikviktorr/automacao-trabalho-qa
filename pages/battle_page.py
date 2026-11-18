@@ -2,8 +2,9 @@ import random
 import re
 import time
 
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
 
 from .base_page import BasePage
 from .client_page import ClientPage
@@ -24,12 +25,34 @@ class BattlePage(BasePage):
         self.wait.until(lambda d: trecho in self.log())
 
     def turno(self):
-        marcadores = [t.text for t in self.driver.find_elements(By.CSS_SELECTOR, f"{self.sala} .battle .turn")]
-        achou = re.search(r"\d+", marcadores[0]) if marcadores else None
+        # lido direto do DOM: o marcador de turno é recriado a cada turno e a referência ficaria velha
+        texto = self.driver.execute_script(
+            "var t = document.querySelector(arguments[0]); return t ? t.textContent : '';", f"{self.sala} .battle .turn")
+        achou = re.search(r"\d+", texto or "")
         return int(achou.group()) if achou else 0
 
-    def esperar_turno(self, numero):
-        self.wait.until(lambda d: self.turno() >= numero)
+    def esperar_turno(self, numero, outro=None):
+        """Espera o turno chegar ao número. Se um Pokémon for nocauteado, o servidor pede uma troca
+        obrigatória antes do próximo turno: escolhe o primeiro reserva (dos dois lados, se `outro` for dado)."""
+        def chegou(d):
+            if self.turno() >= numero:
+                return True
+            for lado in (self, outro):
+                if lado is not None:
+                    lado.fazer_troca_obrigatoria()
+            return False
+        self.wait.until(chegou)
+
+    def fazer_troca_obrigatoria(self):
+        """Na troca obrigatória só aparecem os botões "chooseSwitch", sem golpes."""
+        try:
+            if self.visiveis(f"{self.sala} .battle-controls button[name=chooseMove]"):
+                return
+            reservas = self.visiveis(f"{self.sala} .battle-controls button[name=chooseSwitch]")
+            if reservas:
+                self.clicar(reservas[0])
+        except StaleElementReferenceException:
+            pass
 
     def texto_dos_controles(self):
         return self.esperar_visivel(f"{self.sala} .battle-controls").text
@@ -59,6 +82,21 @@ class BattlePage(BasePage):
     def trocar_para(self, nome):
         botao = next(b for b in self.visiveis(f"{self.sala} .battle-controls button[name=chooseSwitch]") if b.text.strip() == nome)
         self.clicar(botao)
+
+    def jogar_turno(self, indice=0):
+        """Oponente: escolhe um golpe e confirma que a escolha foi registrada.
+        Se os controles forem redesenhados e o clique se perder, escolhe de novo."""
+        turno = self.turno()
+        for _ in range(3):
+            self.esperar_acoes()
+            try:
+                nome = self.usar_golpe(indice)
+                WebDriverWait(self.driver, 20).until(lambda d: "Waiting for opponent" in " ".join(self.textos(f"{self.sala} .battle-controls"))
+                                or self.turno() > turno)
+                return nome
+            except (StaleElementReferenceException, TimeoutException):
+                continue
+        raise AssertionError("o oponente não conseguiu registrar a jogada do turno")
 
     def usar_golpe(self, indice=0):
         botoes = self.visiveis(f"{self.sala} .battle-controls button[name=chooseMove]")

@@ -1,7 +1,7 @@
 import re
 import time
 
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from selenium.webdriver.common.by import By
 
 from .base_page import BasePage
@@ -141,7 +141,11 @@ class ClientPage(BasePage):
         if caixa.is_selected() != privado:
             self.clicar(caixa)  # "Don't allow spectators": a partida de teste fica fechada
         self.clicar(form.find_element(By.CSS_SELECTOR, "button[name=makeChallenge]"))
-        self.wait.until(lambda d: any("Waiting for" in t for t in self.textos(".challenge")))
+        try:
+            self.wait.until(lambda d: any("Waiting for" in t for t in self.textos(".challenge")))
+        except TimeoutException:
+            avisos = self.textos(self.POPUP) + self.textos(".challenge")
+            raise AssertionError(f"o desafio não foi enviado; tela: {avisos}") from None
 
     def aceitar_desafio(self, nome):
         uid = re.sub(r"[^a-z0-9]", "", nome.lower())

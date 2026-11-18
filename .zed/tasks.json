@@ -1,21 +1,25 @@
 [
+  // As tags ligam a tarefa ao botão ▶ que o Zed mostra ao lado de cada "def test_..." e de cada arquivo de teste.
   {
-    "label": "Teste do cursor (apresentação)",
+    "label": "pytest: este caso (apresentação)",
     "command": ".venv/bin/pytest \"$ZED_RELATIVE_FILE\" -k \"$ZED_SYMBOL\" --demo -s",
-    "cwd": "$ZED_WORKTREE_ROOT"
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "tags": ["python-pytest-method"]
   },
   {
-    "label": "Teste do cursor (rápido, sem janela)",
+    "label": "pytest: este caso (rápido, sem janela)",
     "command": ".venv/bin/pytest \"$ZED_RELATIVE_FILE\" -k \"$ZED_SYMBOL\" --headless",
-    "cwd": "$ZED_WORKTREE_ROOT"
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "tags": ["python-pytest-method"]
   },
   {
-    "label": "Arquivo de teste atual (apresentação)",
+    "label": "pytest: arquivo atual (apresentação)",
     "command": ".venv/bin/pytest \"$ZED_RELATIVE_FILE\" --demo -s",
-    "cwd": "$ZED_WORKTREE_ROOT"
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "tags": ["python-pytest-class"]
   },
   {
-    "label": "Todos os testes (apresentação)",
+    "label": "pytest: todos os casos (apresentação)",
     "command": "./apresentacao.sh",
     "cwd": "$ZED_WORKTREE_ROOT"
   }

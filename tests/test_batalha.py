@@ -9,7 +9,13 @@ from pages.battle_page import iniciar_batalha
 
 @pytest.fixture
 def batalha(driver, outra_sessao):
-    jogador, oponente, nome_j, nome_o = iniciar_batalha(driver, outra_sessao)
+    try:
+        jogador, oponente, nome_j, nome_o = iniciar_batalha(driver, outra_sessao)
+    except AssertionError as erro:
+        if "you are limited to" in str(erro):
+            # limite do servidor (12 batalhas a cada 3 minutos por conexão); acontece ao repetir a suíte em sequência
+            pytest.skip("o servidor limitou novas batalhas por alguns minutos (\"Due to high load...\"); rode de novo depois")
+        raise
     yield jogador, oponente, nome_j, nome_o
     jogador.desistir_se_em_andamento()
 
@@ -39,13 +45,17 @@ def test_ct0007_mudar_o_pokemon_durante_o_combate(batalha):
     jogador.ok(f"escolha registrada ('{aviso}') e aguardando o adversário")
 
     jogador.passo(3, "Espera o turno até a troca acontecer")
-    golpe = oponente.usar_golpe(0)  # o oponente decide a ação dele para o turno andar
-    jogador.esperar_turno(2)
+    golpe = oponente.jogar_turno(0)  # o oponente decide a ação dele para o turno andar
+    jogador.esperar_turno(2, oponente)
     log = jogador.log()
     # o log pode trazer a forma entre parênteses, ex.: "Go! Arceus (Arceus-Dragon)!"
     assert f"{em_campo}, come back!" in log and f"Go! {escolhido}" in log, log[-400:]
     jogador.esperar_acoes()
-    assert jogador.ativo() == escolhido
+    if f"{escolhido} fainted" in log:
+        # o golpe do oponente nocauteou quem entrou; o teste fez a troca obrigatória para seguir
+        jogador.nota(f"{escolhido} entrou e foi nocauteado no mesmo turno; a troca em si foi confirmada pelo log.")
+    else:
+        assert jogador.ativo() == escolhido
     assert em_campo in jogador.reservas(), f"{em_campo} não voltou para o banco: {jogador.reservas()}"
     jogador.ok(f"{escolhido} entrou em campo (log: 'Go! {escolhido}!'); {em_campo} voltou para o banco "
                f"e continua disponível; o oponente usou {golpe}")
@@ -71,8 +81,8 @@ def test_ct0008_terastalizar_pokemon_durante_a_batalha(batalha):
         jogador.clicar(jogador.caixa_tera())  # os controles foram redesenhados e a marcação se perdeu
     golpe = jogador.usar_golpe(0)
     jogador.aguardando_oponente()
-    oponente.usar_golpe(0)
-    jogador.esperar_turno(2)
+    oponente.jogar_turno(0)
+    jogador.esperar_turno(2, oponente)
     assert "has Terastallized into" in jogador.log(), f"o Pokémon não terastalizou: {jogador.log()[-400:]}"
     linha = next(l for l in jogador.log().splitlines() if "has Terastallized into" in l)
     assert pokemon in linha and tipo in linha, linha
