@@ -124,12 +124,12 @@ def test_ct0012_abrir_chat_com_outro_usuario(driver, outra_sessao):
     cliente.passo(2, f'Preenche com o nome "{nome_outro}" e clica em "Open" (look up)')
     cliente.digitar(f"{cliente.POPUP} input[name=data]", nome_outro)
     cliente.clicar(f"{cliente.POPUP} button[type=submit]")
-    # o perfil é redesenhado quando os dados do usuário chegam do servidor
-    cliente.wait.until(lambda d: any(nome_outro in t for t in cliente.textos(f"{cliente.POPUP} .userdetails"))
-                       and cliente.textos(f"{cliente.POPUP} .buttonbar"))
+    # o perfil é redesenhado quando os dados do usuário chegam do servidor: a espera devolve a leitura completa,
+    # em vez de ler de novo depois (a janela pode estar sendo redesenhada nesse instante)
+    perfil = cliente.wait.until(lambda d: next(
+        (t for t in cliente.textos(f"{cliente.POPUP} .userdetails") if nome_outro in t), None))
+    botoes = cliente.wait.until(lambda d: (b := cliente.botoes_do_popup()) and "Chat" in b and b)
     cliente.demo_pausa()
-    perfil = cliente.textos(f"{cliente.POPUP} .userdetails")[0]
-    botoes = cliente.botoes_do_popup()
     assert nome_outro in perfil and "(Offline)" not in perfil, perfil
     assert botoes.get("Chat") is True, botoes
     cliente.ok(f"perfil de '{nome_outro}' aberto: usuário online, com os botões {list(botoes)}")
