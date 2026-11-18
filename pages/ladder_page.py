@@ -33,7 +33,7 @@ class LadderPage(BasePage):
                 titulos = p.find_elements("css selector", "h1")
                 if titulos and titulos[0].text.strip().lower() == nome.lower():
                     return p
-            return None
+            return False  # ainda não carregou: o wait tenta de novo
 
         el = self.wait.until(painel)
         self.destacar(el.find_element("css selector", "h1"))

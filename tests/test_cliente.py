@@ -4,7 +4,7 @@ import pytest
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 
-from pages.battle_page import BattlePage, conectar, nome_de_teste
+from pages.battle_page import BattlePage, conectar, nome_de_teste, repetir
 from pages.client_page import ClientPage
 
 CONTA_REGISTRADA = "Zarel"
@@ -117,17 +117,17 @@ def test_ct0012_abrir_chat_com_outro_usuario(driver, outra_sessao):
     cliente = conectar(driver, nome_de_teste("QA Usuario"))
 
     cliente.passo(1, 'Clica em "Find a user"')
-    campo = cliente.campo_de_busca_de_usuario()
-    assert campo.is_enabled()
+    # a janela é desenhada em etapas: repete a leitura se o campo for redesenhado no meio dela
+    assert repetir(lambda: cliente.campo_de_busca_de_usuario().is_enabled())
     cliente.ok("janela para preencher o nome do usuário exibida")
 
     cliente.passo(2, f'Preenche com o nome "{nome_outro}" e clica em "Open" (look up)')
-    cliente.digitar(f"{cliente.POPUP} input[name=data]", nome_outro)
-    cliente.clicar(f"{cliente.POPUP} button[type=submit]")
+    repetir(lambda: cliente.digitar(f"{cliente.POPUP} input[name=data]", nome_outro))
+    repetir(lambda: cliente.clicar(f"{cliente.POPUP} button[type=submit]"))
     # o perfil é redesenhado quando os dados do usuário chegam do servidor: a espera devolve a leitura completa,
     # em vez de ler de novo depois (a janela pode estar sendo redesenhada nesse instante)
     perfil = cliente.wait.until(lambda d: next(
-        (t for t in cliente.textos(f"{cliente.POPUP} .userdetails") if nome_outro in t), None))
+        (t for t in cliente.textos(f"{cliente.POPUP} .userdetails") if nome_outro in t), ""))
     botoes = cliente.wait.until(lambda d: (b := cliente.botoes_do_popup()) and "Chat" in b and b)
     cliente.demo_pausa()
     assert nome_outro in perfil and "(Offline)" not in perfil, perfil
@@ -137,12 +137,12 @@ def test_ct0012_abrir_chat_com_outro_usuario(driver, outra_sessao):
                  'e ficam com "Challenge" e "Chat" desabilitados.')
 
     cliente.passo(3, 'Clica em "Chat"')
-    cliente.clicar_no_popup("Chat")
+    repetir(lambda: cliente.clicar_no_popup("Chat"))
     cliente.resultado_esperado("Abre um menu de chat com o nome do usuário selecionado além de mostrar o "
                                "histórico de conversa com o mesmo")
-    janela = cliente.janela_de_mensagem(nome_outro)
-    assert nome_outro in janela.text, janela.text
-    assert janela.find_elements("css selector", "textarea"), "a janela não tem campo de mensagem"
+    texto_janela, tem_campo = cliente.ler_janela_de_mensagem(nome_outro)
+    assert nome_outro in texto_janela, texto_janela
+    assert tem_campo, "a janela não tem campo de mensagem"
     cliente.ok(f"janela de chat aberta com o nome '{nome_outro}', campo de mensagem e o histórico da conversa (vazio)")
     cliente.nota("O documento pede dois usuários registrados; o teste usa duas sessões de convidado com nome, "
                  "e nenhuma mensagem é enviada.")

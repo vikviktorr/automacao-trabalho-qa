@@ -16,7 +16,7 @@ fi
 clear
 echo "=============================================================="
 echo "  Pokémon Showdown - testes automatizados (Selenium + Firefox)"
-echo "  12 casos: CT_0001 a CT_0012 (documento qatrabalho.docx)"
+echo "  12 casos: CT_0001 a CT_0012 (documento qatrabalho_revisado_QA.docx)"
 echo "=============================================================="
 
 set +e

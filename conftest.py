@@ -1,5 +1,6 @@
 import base64
 from datetime import datetime
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -27,6 +28,13 @@ def pytest_configure(config):
     config.stash["inicio"] = datetime.now()
 
 
+class Firefox(webdriver.Firefox):
+    """Firefox do Selenium com dois campos a mais, lidos pelo relatório de cada caso."""
+
+    notas: list[str]  # observações registradas pelo teste (diferenças entre o documento e o site)
+    resultado_esperado: str | None  # texto do resultado esperado do caso, registrado na última etapa
+
+
 def criar_driver(config):
     """Abre um Firefox novo, com perfil limpo (sem cookies, sem localStorage e sem login)."""
     opcoes = webdriver.FirefoxOptions()
@@ -34,7 +42,7 @@ def criar_driver(config):
         opcoes.add_argument("-headless")
     # não espera anúncios e imagens terminarem de carregar; cada página tem sua própria espera explícita
     opcoes.page_load_strategy = "eager"
-    drv = webdriver.Firefox(options=opcoes, service=webdriver.FirefoxService(geckodriver()))
+    drv = Firefox(options=opcoes, service=webdriver.FirefoxService(geckodriver()))
     drv.set_window_size(1366, 900)
     drv.set_page_load_timeout(90)
     drv.notas = []
@@ -42,16 +50,14 @@ def criar_driver(config):
     return drv
 
 
+@cache  # pergunta ao Selenium Manager uma vez só por execução
 def geckodriver():
     """Caminho do geckodriver compatível com o Firefox instalado, baixado pelo Selenium Manager.
 
     Ignora o geckodriver do PATH: no Parrot, /usr/bin/geckodriver vem do pacote eyewitness e é antigo demais
     para o Firefox atual.
     """
-    if not hasattr(geckodriver, "caminho"):
-        geckodriver.caminho = SeleniumManager().binary_paths(
-            ["--browser", "firefox", "--skip-driver-in-path"])["driver_path"]
-    return geckodriver.caminho
+    return SeleniumManager().binary_paths(["--browser", "firefox", "--skip-driver-in-path"])["driver_path"]
 
 
 @pytest.fixture

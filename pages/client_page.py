@@ -100,7 +100,7 @@ class ClientPage(BasePage):
 
     def usuarios_na_sala(self, sala):
         el = self.achar(f"{sala} .battle-userlist .userlist-count", visivel=False)
-        return el.get_attribute("textContent").strip()
+        return (el.get_attribute("textContent") or "").strip()
 
     # --- encontrar um usuário (Find a user) e mensagem privada ---
     def procurar_usuario(self, nome):
@@ -132,6 +132,19 @@ class ClientPage(BasePage):
         """Janela de mensagem privada (PM) aberta com o usuário."""
         uid = re.sub(r"[^a-z0-9]", "", nome.lower())
         return self.esperar_visivel(f".pm-window-{uid}")
+
+    def ler_janela_de_mensagem(self, nome: str) -> tuple[str, bool]:
+        """(texto da janela de mensagem com o usuário, se ela tem campo para escrever).
+        A janela é redesenhada quando o histórico chega do servidor; se isso acontecer no meio da leitura,
+        lê de novo."""
+        for _ in range(5):
+            try:
+                janela = self.janela_de_mensagem(nome)
+                return janela.text, bool(janela.find_elements(By.CSS_SELECTOR, "textarea"))
+            except StaleElementReferenceException:
+                time.sleep(0.5)
+        janela = self.janela_de_mensagem(nome)
+        return janela.text, bool(janela.find_elements(By.CSS_SELECTOR, "textarea"))
 
     # --- desafio direto e fila ---
     def enviar_desafio(self, formato, privado=True):

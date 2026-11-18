@@ -38,7 +38,7 @@ class DexPage(BasePage):
 
     def texto(self, css):
         # textContent ignora o text-transform: uppercase do CSS dos tipos
-        return self.achar(css).get_attribute("textContent").strip()
+        return (self.achar(css).get_attribute("textContent") or "").strip()
 
 
     # --- lista de Pokémon que aprendem o golpe ---
