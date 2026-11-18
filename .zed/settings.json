@@ -1,0 +1,12 @@
+{
+  // Usa o pytest (e não o unittest) nos botões ▶ ao lado de cada teste
+  "languages": {
+    "Python": {
+      "tasks": {
+        "variables": {
+          "TEST_RUNNER": "pytest"
+        }
+      }
+    }
+  }
+}
