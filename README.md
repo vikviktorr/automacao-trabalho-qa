@@ -1,7 +1,12 @@
 # Automação de testes – Pokémon Showdown (Selenium + Python + Firefox)
 
-Automação dos casos de teste **CT_0001 a CT_0012** do documento de casos de uso `qatrabalho.docx`
-(Desafio 4.0 – Qualidade e Teste de Software). Cada caso segue os passos Usuário/Sistema do documento.
+Automação dos casos de teste **CT_0001 a CT_0012** do documento de casos de uso revisado
+`qatrabalho_revisado_QA.docx` (Desafio 4.0 – Qualidade e Teste de Software).
+
+Na revisão, a coluna "Sistema" de cada caso registra só o **resultado esperado, consolidado na última etapa**;
+as etapas intermediárias são apenas ações do usuário. Os testes seguem a mesma estrutura: executam os passos
+do documento, imprimem o "Resultado esperado" com o texto do caso e só então fazem as verificações finais.
+As verificações intermediárias que restaram servem para garantir que o passo aconteceu antes de seguir.
 
 | Área | Casos | Arquivo de teste |
 |---|---|---|
@@ -29,7 +34,9 @@ O Selenium Manager encontra o Firefox instalado e baixa o geckodriver sozinho. A
 No Zed, abra a pasta do projeto e use o ▶ ao lado de cada `def test_...` (tarefas em `.zed/tasks.json`:
 "este caso" em modo apresentação ou rápido, e "arquivo atual"). Também dá para rodar pela paleta com `task: spawn`.
 
-Saídas: `reports/relatorio.html` (relatório com print e notas de cada caso) e `evidencias/` (PNG por caso).
+Saídas: `reports/relatorio.html` e `evidencias/` (PNG por caso). Para cada caso o relatório traz o resultado
+esperado, a captura de tela (sem credenciais: os testes usam só sessões de convidado) e o registro pedido pelo
+documento: data/hora, URL final, navegador e versão, viewport, zoom e orientação.
 
 ## Estrutura (Page Object)
 
@@ -67,6 +74,7 @@ Os testes validam o comportamento real; quando ele difere do texto do documento,
 |---|---|---|
 | CT_0006 | Passo 3: clicar em "Paste copy here" | Esse botão não existe. A cópia vai para a pasta arrastando-a, que é o recurso do Teambuilder. O arraste é disparado por JavaScript, porque o WebDriver não gera o arrastar-e-soltar do HTML5 no Firefox. |
 | CT_0007 a CT_0009 | Passo 1: clicar em "Battle" | A partida começa por desafio direto entre as duas sessões de teste (ver acima). |
+| CT_0008 | Resultado esperado: "Teraliza o ataque do Pokémon selecionado" | O teste confere no log que o Pokémon terastalizou para o Tera Type do time, como diz o resumo do caso. |
 | CT_0012 | Dois usuários registrados | Duas sessões de convidado com nome. O perfil não escreve "Online"; só usuários offline recebem "(Offline)". |
 
 ## Site fora do ar

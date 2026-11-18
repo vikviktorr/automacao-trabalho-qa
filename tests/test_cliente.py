@@ -21,10 +21,11 @@ def test_ct0004_escolher_nome_ja_registrado(driver):
 
     cliente.passo(1, 'Clica em "Choose name"')
     cliente.clicar_choose_name()
-    cliente.ok("janela de escolha de nome aberta")
 
-    cliente.passo(2, f'Informa o nome registrado "{CONTA_REGISTRADA}" e confirma')
+    cliente.passo(2, f'Informa o nome já registrado "{CONTA_REGISTRADA}" e confirma em "Choose name"')
     cliente.informar_nome(CONTA_REGISTRADA)
+    cliente.resultado_esperado("Identifica que o nome pertence a uma conta registrada e pede a autenticação "
+                               "da conta (senha ou login Google) antes de liberar o nome.")
     texto = cliente.esperar_texto_popup("registered")
     assert "The name you chose is registered" in texto, texto
     # o campo de senha é desenhado logo depois do aviso
@@ -62,6 +63,8 @@ def test_ct0011_assistir_batalha_como_espectador(driver):
                f"lista de usuários ({cliente.usuarios_na_sala(sala)})")
 
     cliente.passo(3, "Acompanha a partida por alguns turnos")
+    cliente.resultado_esperado("Atualiza o campo e o log a cada turno, não exibe golpes nem trocas para o "
+                               "espectador e permite apenas o uso do chat da batalha.")
     botoes = cliente.botoes_da_batalha(sala)
     assert not {"chooseMove", "chooseSwitch", "chooseTeamPreview"} & set(botoes), botoes
     assert not cliente.visiveis(f"{sala} .movemenu, {sala} .switchmenu"), "o espectador recebeu opções de golpe/troca"
@@ -97,6 +100,8 @@ def test_ct0010_cancelar_busca_de_partida_na_fila(driver):
     cliente.ok('busca cancelada e o botão "Battle!" voltou a ser exibido')
 
     cliente.passo(3, "Permanece um minuto na tela principal")
+    cliente.resultado_esperado("Não inicia nenhuma batalha nem abre aba de partida, confirmando que a busca "
+                               "foi encerrada no servidor.")
     for _ in range(60):
         assert not cliente.em_batalha(), "uma batalha foi aberta depois do Cancel"
         time.sleep(1)
@@ -116,7 +121,7 @@ def test_ct0012_abrir_chat_com_outro_usuario(driver, outra_sessao):
     assert campo.is_enabled()
     cliente.ok("janela para preencher o nome do usuário exibida")
 
-    cliente.passo(2, f'Preenche o nome "{nome_outro}" e clica em "Open"')
+    cliente.passo(2, f'Preenche com o nome "{nome_outro}" e clica em "Open" (look up)')
     cliente.digitar(f"{cliente.POPUP} input[name=data]", nome_outro)
     cliente.clicar(f"{cliente.POPUP} button[type=submit]")
     # o perfil é redesenhado quando os dados do usuário chegam do servidor
@@ -133,6 +138,8 @@ def test_ct0012_abrir_chat_com_outro_usuario(driver, outra_sessao):
 
     cliente.passo(3, 'Clica em "Chat"')
     cliente.clicar_no_popup("Chat")
+    cliente.resultado_esperado("Abre um menu de chat com o nome do usuário selecionado além de mostrar o "
+                               "histórico de conversa com o mesmo")
     janela = cliente.janela_de_mensagem(nome_outro)
     assert nome_outro in janela.text, janela.text
     assert janela.find_elements("css selector", "textarea"), "a janela não tem campo de mensagem"

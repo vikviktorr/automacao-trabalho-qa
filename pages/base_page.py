@@ -51,6 +51,12 @@ class BasePage:
     def ok(self, descricao):
         print(f"      OK - {descricao}")
 
+    def resultado_esperado(self, texto):
+        """Registra o resultado esperado do caso, consolidado na última etapa (coluna "Sistema" do documento)."""
+        self.driver.resultado_esperado = texto
+        print(f"\n   Resultado esperado: {texto}")
+        self.demo_pausa()
+
     def achar(self, css, visivel=True):
         cond = EC.visibility_of_element_located if visivel else EC.presence_of_element_located
         el = self.wait.until(cond((By.CSS_SELECTOR, css)))

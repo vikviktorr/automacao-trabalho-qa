@@ -38,6 +38,7 @@ def criar_driver(config):
     drv.set_window_size(1366, 900)
     drv.set_page_load_timeout(90)
     drv.notas = []
+    drv.resultado_esperado = None
     return drv
 
 
@@ -74,9 +75,11 @@ def pytest_runtest_makereport(item, call):
         status = "defeito" if relatorio.skipped else "defeito_corrigido"
     else:
         status = "aprovado" if relatorio.passed else ("ignorado" if relatorio.skipped else "reprovado")
-    arquivo = EVIDENCIAS / f"{codigo}_{status}_{datetime.now():%Y%m%d_%H%M%S}.png"
+    momento = datetime.now()
+    arquivo = EVIDENCIAS / f"{codigo}_{status}_{momento:%Y%m%d_%H%M%S}.png"
     try:
         drv.save_screenshot(str(arquivo))
+        ambiente = registro_do_ambiente(drv, momento)
     except WebDriverException:
         # janela fechada ou navegador caído: fica sem evidência, mas a suíte segue para o próximo caso
         return
@@ -89,9 +92,23 @@ def pytest_runtest_makereport(item, call):
         imagem = base64.b64encode(arquivo.read_bytes()).decode()
         extras.append(pytest_html_extras.image(imagem, f"Evidência {codigo}"))
         extras.append(pytest_html_extras.url(drv.current_url, "Página final"))
+        if drv.resultado_esperado:
+            extras.append(pytest_html_extras.html(f"<p><b>Resultado esperado:</b> {drv.resultado_esperado}</p>"))
+        extras.append(pytest_html_extras.html(f"<p><b>Evidência:</b> {ambiente}</p>"))
         for nota in drv.notas:
             extras.append(pytest_html_extras.html(f"<p><b>Nota:</b> {nota}</p>"))
     relatorio.extras = extras
+
+
+def registro_do_ambiente(drv, momento):
+    """Dados que o documento pede junto de cada captura: data/hora, URL, navegador/versão, viewport e zoom."""
+    caps = drv.capabilities
+    largura, altura, zoom = drv.execute_script(
+        "return [window.innerWidth, window.innerHeight, Math.round(window.devicePixelRatio * 100)]")
+    return (f"{momento:%d/%m/%Y %H:%M:%S}; URL {drv.current_url}; "
+            f"navegador {caps.get('browserName', '?')} {caps.get('browserVersion', '?')} "
+            f"({caps.get('platformName', '?')}); viewport {largura}x{altura} CSS px; zoom {zoom}%; "
+            "orientação paisagem (desktop); captura sem credenciais")
 
 
 def pytest_html_report_title(report):
@@ -99,4 +116,4 @@ def pytest_html_report_title(report):
 
 
 def pytest_html_results_summary(prefix, summary, postfix):
-    prefix.append("<p>Disciplina Qualidade e Teste de Software - Desafio 4.0. Casos do documento qatrabalho.docx. Navegador: Mozilla Firefox (Selenium WebDriver).</p>")
+    prefix.append("<p>Disciplina Qualidade e Teste de Software - Desafio 4.0. Casos do documento revisado qatrabalho_revisado_QA.docx; cada caso compara o comportamento observado com o resultado esperado consolidado na última etapa. Navegador: Mozilla Firefox (Selenium WebDriver).</p>")

@@ -47,6 +47,8 @@ def test_ct0007_mudar_o_pokemon_durante_o_combate(batalha):
     jogador.passo(3, "Espera o turno até a troca acontecer")
     golpe = oponente.jogar_turno(0)  # o oponente decide a ação dele para o turno andar
     jogador.esperar_turno(2, oponente)
+    jogador.resultado_esperado("Coloca em campo o Pokémon escolhido, registra a entrada no log e mantém os "
+                               "demais vivos no banco.")
     log = jogador.log()
     # o log pode trazer a forma entre parênteses, ex.: "Go! Arceus (Arceus-Dragon)!"
     assert f"{em_campo}, come back!" in log and f"Go! {escolhido}" in log, log[-400:]
@@ -83,6 +85,8 @@ def test_ct0008_terastalizar_pokemon_durante_a_batalha(batalha):
     jogador.aguardando_oponente()
     oponente.jogar_turno(0)
     jogador.esperar_turno(2, oponente)
+    jogador.resultado_esperado("Terastaliza o Pokémon selecionado pelo usuário ao usar o golpe, com o tipo "
+                               "alterado para o Tera Type definido no time.")
     assert "has Terastallized into" in jogador.log(), f"o Pokémon não terastalizou: {jogador.log()[-400:]}"
     linha = next(l for l in jogador.log().splitlines() if "has Terastallized into" in l)
     assert pokemon in linha and tipo in linha, linha
@@ -105,6 +109,7 @@ def test_ct0009_desistir_de_uma_batalha_em_andamento(batalha):
 
     jogador.passo(3, 'Seleciona "Forfeit"')
     jogador.confirmar_desistencia(fechar_sala=False)  # mantém a sala aberta para conferir o log
+    jogador.resultado_esperado("Encerra a batalha, registra a desistência no log e declara o adversário vencedor.")
     jogador.esperar_no_log(f"{nome_o} won the battle!")
     log = jogador.log()
     assert f"{nome_j} forfeited." in log, log[-300:]

@@ -55,6 +55,7 @@ def test_ct0005_organizar_times_em_pastas(driver):
     tb.passo(3, "Arrasta um dos times para a pasta criada")
     tb.selecionar_pasta("all")
     tb.arrastar_time_para_pasta(0, f"{PASTA}/")
+    tb.resultado_esperado("Move o time para a pasta e atualiza a listagem.")
     tb.wait.until(lambda d: f"{PASTA}/Time Ofensivo" in " ".join(tb.nomes_dos_times()))
     salvos = {nome: pasta for nome, pasta, *_ in tb.times_salvos()}
     assert salvos == {"Time Ofensivo": PASTA, "Time Defensivo": ""}, salvos
@@ -94,7 +95,9 @@ def test_ct0006_duplicar_time_para_uma_pasta_criada(driver):
     tb.nota('O botão "Paste copy here" citado no passo 3 do documento não existe no Teambuilder; '
             "a cópia é levada para a pasta arrastando-a, que é o recurso oferecido pelo site.")
 
-    tb.passo(3, "Confere o time original")
+    tb.passo(3, "Confere o time original e a cópia na pasta")
+    tb.resultado_esperado("Mantém o time original sem nenhuma alteração, além de criar uma nova cópia "
+                          "para a pasta selecionada.")
     salvos = tb.times_salvos()
     copia = next(t for t in salvos if t[0] == "Copy of Time Ofensivo")
     atual = next(t for t in salvos if t[0] == "Time Ofensivo")

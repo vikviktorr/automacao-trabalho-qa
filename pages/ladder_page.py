@@ -11,9 +11,6 @@ class LadderPage(BasePage):
     def titulo(self):
         return self.achar(".ladder h1").text
 
-    def colunas(self):
-        return [th.text.strip() for th in self.achar_todos(".ladder table th") if th.text.strip()]
-
     def linhas(self, quantidade=10):
         """Retorna [(posicao, nome, elo, link)] dos primeiros colocados."""
         resultado = []
