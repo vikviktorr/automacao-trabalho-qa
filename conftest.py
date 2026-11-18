@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 from selenium import webdriver
+from selenium.webdriver.common.selenium_manager import SeleniumManager
 from selenium.common.exceptions import WebDriverException
 
 from pages.base_page import BasePage
@@ -33,13 +34,24 @@ def criar_driver(config):
         opcoes.add_argument("-headless")
     # não espera anúncios e imagens terminarem de carregar; cada página tem sua própria espera explícita
     opcoes.page_load_strategy = "eager"
-    # o Selenium Manager encontra o Firefox instalado e baixa o geckodriver sozinho
-    drv = webdriver.Firefox(options=opcoes)
+    drv = webdriver.Firefox(options=opcoes, service=webdriver.FirefoxService(geckodriver()))
     drv.set_window_size(1366, 900)
     drv.set_page_load_timeout(90)
     drv.notas = []
     drv.resultado_esperado = None
     return drv
+
+
+def geckodriver():
+    """Caminho do geckodriver compatível com o Firefox instalado, baixado pelo Selenium Manager.
+
+    Ignora o geckodriver do PATH: no Parrot, /usr/bin/geckodriver vem do pacote eyewitness e é antigo demais
+    para o Firefox atual.
+    """
+    if not hasattr(geckodriver, "caminho"):
+        geckodriver.caminho = SeleniumManager().binary_paths(
+            ["--browser", "firefox", "--skip-driver-in-path"])["driver_path"]
+    return geckodriver.caminho
 
 
 @pytest.fixture

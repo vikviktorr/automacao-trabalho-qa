@@ -29,7 +29,8 @@ As verificações intermediárias que restaram servem para garantir que o passo 
 ```
 
 Na primeira execução o script cria o `.venv` e instala o `requirements.txt` (Selenium, pytest e pytest-html).
-O Selenium Manager encontra o Firefox instalado e baixa o geckodriver sozinho. A suíte completa leva cerca de 4 minutos.
+O Selenium Manager encontra o Firefox instalado e baixa o geckodriver compatível; um geckodriver que
+esteja no PATH (no Parrot, o `/usr/bin/geckodriver` antigo do pacote eyewitness) é ignorado. A suíte completa leva cerca de 4 minutos.
 
 No Zed, abra a pasta do projeto e use o ▶ ao lado de cada `def test_...` (tarefas em `.zed/tasks.json`:
 "este caso" em modo apresentação ou rápido, e "arquivo atual"). Também dá para rodar pela paleta com `task: spawn`.
